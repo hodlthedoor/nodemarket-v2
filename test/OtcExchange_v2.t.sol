@@ -6,7 +6,7 @@ import "src/structs/Order.sol";
 import "src/structs/Signature.sol";
 import "./mock-erc20.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import { IERC20Errors } from "@openzeppelin/contracts/interfaces/draft-IERC6093.sol";
+import { IERC20Errors } from "lib/openzeppelin-contracts/contracts/interfaces/draft-IERC6093.sol";
 import "forge-std/Test.sol";
 import "forge-std/console.sol";
 import {IAccessControl} from "@openzeppelin/contracts/access/IAccessControl.sol";
@@ -32,6 +32,7 @@ contract OtcExchange_V2Test is Test {
         exchange.setCommission(0);
         exchange.updateSigner(vm.addr(signerPrivateKey), true);
 
+
         //exchange.updateSigner(vm.addr(ownerPrivateKey), true);
     }
 
@@ -41,7 +42,7 @@ contract OtcExchange_V2Test is Test {
         Order memory order = Order({
             amount: 1000,
             price: 2000,
-            seller: seller,
+            seller: seller, 
             validUntil: uint64(block.timestamp + 1 days),
             id: 0,
             paymentToken: zeroAddress,
@@ -110,8 +111,6 @@ contract OtcExchange_V2Test is Test {
         bytes32 orderHash = exchange.getEIP712OrderHashWithZeroBuyer(order);
         bytes32 orderHashNewFunction = getEIP712OrderHashWithZeroBuyer(order);
 
-        // console.logBytes32( orderHash);
-        // console.logBytes32(orderHashNewFunction);
         bytes32 orderHash2 = exchange.getEIP712OrderHash(order);
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(ownerPrivateKey, orderHash);
         (uint8 v2, bytes32 r2, bytes32 s2) = vm.sign(
@@ -218,9 +217,6 @@ contract OtcExchange_V2Test is Test {
         // Sign the order
         bytes32 orderHash = exchange.getEIP712OrderHashWithZeroBuyer(order);
         bytes32 orderHashNewFunction = getEIP712OrderHashWithZeroBuyer(order);
-
-        // console.logBytes32( orderHash);
-        // console.logBytes32(orderHashNewFunction);
         bytes32 orderHash2 = exchange.getEIP712OrderHash(order);
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(ownerPrivateKey, orderHash);
         (uint8 v2, bytes32 r2, bytes32 s2) = vm.sign(
@@ -314,8 +310,7 @@ contract OtcExchange_V2Test is Test {
         bytes32 orderHash = exchange.getEIP712OrderHashWithZeroBuyer(order);
         bytes32 orderHashNewFunction = getEIP712OrderHashWithZeroBuyer(order);
 
-        // console.logBytes32( orderHash);
-        // console.logBytes32(orderHashNewFunction);
+
         bytes32 orderHash2 = exchange.getEIP712OrderHash(order);
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(ownerPrivateKey, orderHash);
         (uint8 v2, bytes32 r2, bytes32 s2) = vm.sign(
@@ -1768,7 +1763,6 @@ contract OtcExchange_V2Test is Test {
 
         uint256 initialSellerEthBalance = address(seller).balance;
 
-        console.log("start fill order for: ", msg.sender);
         exchange.fillOrder(
             orderToFill,
             v,

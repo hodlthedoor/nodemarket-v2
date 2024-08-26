@@ -273,7 +273,7 @@ contract OtcExchange_V2 is AccessControl {
 
         emit OnchainBuyOrderCreated(orderHash, order);
     }
-
+    
     function cancelOrder(
         Order calldata order,
         uint8 v,
