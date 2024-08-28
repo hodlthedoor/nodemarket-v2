@@ -9,7 +9,7 @@ import "node_modules/@openzeppelin/contracts/token/ERC721/utils/ERC721Holder.sol
 import "node_modules/@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
 import "node_modules/@openzeppelin/contracts/access/Ownable.sol";
 import "node_modules/@openzeppelin/contracts/security/ReentrancyGuard.sol";
-import "@openzeppelin/contracts/utils/Strings.sol";
+import "node_modules/@openzeppelin/contracts/utils/Strings.sol";
 import "./interfaces/IHyperCycleLicense.sol";
 import "./interfaces/ICHYPC.sol";
 import "./interfaces/IHYPCSwapV2.sol";
@@ -468,19 +468,44 @@ contract HyperCycleShareTokensV2 is
         });
     }
 
-    // @notice An internal function to check the backing of the license from the given
-    //         chypcNumber. This checks assignments via the SwapV2 contract first, and
-    //         then the SwapV1 contract.
-    // @param  chypcNumber: The cHyPC NFT Id pointing to the licenseNumber.
-    // @param  licenseNumber: The license NFT Id to deposit into this share.
-    function _verifyCHYPCAssignment(uint256 chypcNumber, uint256 licenseNumber) internal {
-        string memory stringAssigned = Strings.toString(licenseNumber);
-        if (swapV2Contract.getAssignmentNumber(chypcNumber) != licenseNumber && 
-            !Strings.equal(swapV2Contract.getAssignmentString(chypcNumber), stringAssigned) && 
-            !Strings.equal(chypcV1Contract.getAssignment(chypcNumber), stringAssigned)) {
-            revert LicenseMustHaveCHYPCBacking();
-        }
+function _verifyCHYPCAssignment(uint256 chypcNumber, uint256 licenseNumber) internal {
+    // Convert the uint256 to a string manually
+    string memory stringAssigned = _uintToString(licenseNumber);
+    
+    // Check the assignments without relying on Strings library
+    if (
+        swapV2Contract.getAssignmentNumber(chypcNumber) != licenseNumber &&
+        !_compareStrings(swapV2Contract.getAssignmentString(chypcNumber), stringAssigned) &&
+        !_compareStrings(chypcV1Contract.getAssignment(chypcNumber), stringAssigned)
+    ) {
+        revert LicenseMustHaveCHYPCBacking();
     }
+}
+
+// Helper function to convert uint256 to string
+function _uintToString(uint256 value) internal pure returns (string memory) {
+    if (value == 0) {
+        return "0";
+    }
+    uint256 temp = value;
+    uint256 digits;
+    while (temp != 0) {
+        digits++;
+        temp /= 10;
+    }
+    bytes memory buffer = new bytes(digits);
+    while (value != 0) {
+        digits -= 1;
+        buffer[digits] = bytes1(uint8(48 + uint256(value % 10)));
+        value /= 10;
+    }
+    return string(buffer);
+}
+
+// Helper function to compare two strings
+function _compareStrings(string memory a, string memory b) internal pure returns (bool) {
+    return keccak256(abi.encodePacked(a)) == keccak256(abi.encodePacked(b));
+}
 
     // @notice An internal function to return the license level of a license token.
     // @param  licenseNumber: The license NFT id.

@@ -3,6 +3,7 @@ pragma solidity ^0.8.13;
 
 import "forge-std/Test.sol";
 import "src/core/HyperCycleLicense.sol";
+import "../mock/MockReceiverForLicense.sol";
 
 contract HyperCycleLicenseTest is Test {
 
@@ -175,6 +176,65 @@ function testUserCanMergeLicense() public {
     
     vm.expectRevert("ERC721: invalid token ID");
     license.ownerOf((startNumber + 3) * 2);
+}
+
+function testGetters() public {
+    // Mint some tokens first
+
+    license.mint(40);
+
+        // Transfer tokens to users
+    for (uint i = 0; i < 40; i++) {
+        license.transferFrom(address(this), user1, startNumber + i);
+    }
+
+    vm.startPrank(user1);
+
+    // Test getBurnData for non-burnt token
+    vm.expectRevert(abi.encodeWithSelector(TokenMustBeBurnt.selector));
+    license.getBurnData(startNumber + 6);
+
+    // Test getLicenseHeight for invalid token
+    vm.expectRevert(abi.encodeWithSelector(MustBeValidToken.selector));
+    license.getLicenseHeight(startNumber + 6000);
+
+    // Test getLicenseHeight for valid token
+    license.split(startNumber);
+    license.split(startNumber * 2);
+    license.split(startNumber * 4);
+    license.split(startNumber * 8);
+    assertEq(license.getLicenseHeight(startNumber * 16), 19 - 4);
+
+    // Test getLicenseStatus
+    assertEq(uint(license.getLicenseStatus(startNumber)), 2, 'split'); // SPLIT
+    assertEq(uint(license.getLicenseStatus(startNumber + 1)), 1, 'minted'); // MINTED
+    assertEq(uint(license.getLicenseStatus(startNumber + 6000)), 0, 'not minted'); // NOT_MINTED
+
+    // Burn a token and check its status
+    license.burn(startNumber + 4, "burnDataString");
+    assertEq(uint(license.getLicenseStatus(startNumber + 4)), 3, 'burned'); // BURN
+}
+
+function testReentryTests() public {
+    MockERC721ReceiverLicenseSplitTest reentryContract = new MockERC721ReceiverLicenseSplitTest(address(license2));
+    
+    license2.transferOwnership(address(reentryContract));
+
+    // Test minting without reentry
+    reentryContract.setTest(3, 0);
+    reentryContract.callMint(1);
+
+    // Test splitting reentry
+    reentryContract.setTest(1, 0);
+    vm.expectRevert("ReentrancyGuard: reentrant call");
+    reentryContract.callSplit(8796629893120);
+
+    // Test merging reentry
+    reentryContract.setTest(3, 0);
+    reentryContract.callSplit(8796629893120);
+    reentryContract.setTest(2, 0);
+    vm.expectRevert("ReentrancyGuard: reentrant call");
+    reentryContract.callMerge(8796629893120 * 2);
 }
 
 }
