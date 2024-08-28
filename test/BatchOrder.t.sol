@@ -6,7 +6,7 @@ import "src/structs/Order.sol";
 import "src/structs/Signature.sol";
 import "./mock-erc20.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import { IERC20Errors } from "lib/openzeppelin-contracts/contracts/interfaces/draft-IERC6093.sol";
+
 import "forge-std/Test.sol";
 import "forge-std/console.sol";
 import {IAccessControl} from "@openzeppelin/contracts/access/IAccessControl.sol";

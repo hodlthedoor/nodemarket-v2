@@ -5,13 +5,16 @@ import "src/OtcExchange_V2.sol";
 import "src/structs/Order.sol";
 import "src/structs/Signature.sol";
 import "./mock-erc20.sol";
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import { IERC20Errors } from "lib/openzeppelin-contracts/contracts/interfaces/draft-IERC6093.sol";
+import "node_modules/@openzeppelin/contracts/token/ERC20/IERC20.sol";
+
 import "forge-std/Test.sol";
 import "forge-std/console.sol";
-import {IAccessControl} from "@openzeppelin/contracts/access/IAccessControl.sol";
+import {IAccessControl} from "node_modules/@openzeppelin/contracts/access/IAccessControl.sol";
 
 contract OtcExchange_V2Test is Test {
+
+    error ERC20InsufficientBalance(address buyer, uint256 insufficientBuyerPaymentTokenBalance, uint256 priceInTokens);
+
     address internal contractOwner = address(0x69696969);
     uint256 internal ownerPrivateKey = 0xA11CE;
     uint256 internal owner2PrivateKey = 0xA11CE2;
@@ -1060,7 +1063,8 @@ contract OtcExchange_V2Test is Test {
         // Test that only an account with WITHDRAWER_ROLE can withdraw
         vm.prank(address(0x1337));
 
-        vm.expectRevert(abi.encodeWithSelector(IAccessControl.AccessControlUnauthorizedAccount.selector, address(0x1337), 0x10dac8c06a04bec0b551627dad28bc00d6516b0caacd1c7b345fcdb5211334e4));
+        //vm.expectRevert(abi.encodeWithSelector(IAccessControl.AccessControlUnauthorizedAccount.selector, address(0x1337), 0x10dac8c06a04bec0b551627dad28bc00d6516b0caacd1c7b345fcdb5211334e4));
+        vm.expectRevert("AccessControl: account 0x0000000000000000000000000000000000001337 is missing role 0x10dac8c06a04bec0b551627dad28bc00d6516b0caacd1c7b345fcdb5211334e4");
         exchange.withdraw(recipient);
 
         // Assign WITHDRAWER_ROLE to the msg.sender (contract's owner assumed)
@@ -1084,8 +1088,8 @@ contract OtcExchange_V2Test is Test {
 
         // Test that only an account with WITHDRAWER_ROLE can withdraw tokens
         vm.prank(address(0x1337));
-         vm.expectRevert(abi.encodeWithSelector(IAccessControl.AccessControlUnauthorizedAccount.selector, address(0x1337), 0x10dac8c06a04bec0b551627dad28bc00d6516b0caacd1c7b345fcdb5211334e4));
-       
+         //vm.expectRevert(abi.encodeWithSelector(IAccessControl.AccessControlUnauthorizedAccount.selector, address(0x1337), 0x10dac8c06a04bec0b551627dad28bc00d6516b0caacd1c7b345fcdb5211334e4));
+        vm.expectRevert("AccessControl: account 0x0000000000000000000000000000000000001337 is missing role 0x10dac8c06a04bec0b551627dad28bc00d6516b0caacd1c7b345fcdb5211334e4");
         exchange.withdrawToken(token, recipient, withdrawAmount);
 
         // Assign WITHDRAWER_ROLE to the msg.sender (contract's owner assumed)
@@ -1300,8 +1304,8 @@ contract OtcExchange_V2Test is Test {
 
         // Perform the purchase (Should revert)
         startHoax(buyer);
-        vm.expectRevert(abi.encodeWithSelector(IERC20Errors.ERC20InsufficientBalance.selector, seller, insufficientSellerTokenBalance, orderAmount));
-        
+        //vm.expectRevert(abi.encodeWithSelector(ERC20InsufficientBalance.selector, seller, insufficientSellerTokenBalance, orderAmount));
+        vm.expectRevert("ERC20: transfer amount exceeds balance");
         exchange.fillOrder(order, v, r, s, v2, r2, s2, address(0));
     }
 
@@ -1356,7 +1360,8 @@ contract OtcExchange_V2Test is Test {
 
         // Perform the purchase (Should revert)
         startHoax(buyer);
-        vm.expectRevert(abi.encodeWithSelector(IERC20Errors.ERC20InsufficientBalance.selector, buyer, insufficientBuyerPaymentTokenBalance, priceInTokens));
+        //vm.expectRevert(abi.encodeWithSelector(ERC20InsufficientBalance.selector, buyer, insufficientBuyerPaymentTokenBalance, priceInTokens));
+        vm.expectRevert("ERC20: transfer amount exceeds balance");
         exchange.fillOrder(order, v, r, s, v2, r2, s2, address(0));
     }
 

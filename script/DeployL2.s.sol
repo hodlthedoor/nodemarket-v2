@@ -11,7 +11,7 @@ import {HyperCycleSwapV2} from "src/core/HyperCycleSwapV2.sol";
 
 contract DeployL2Script is Script {
 
-    bool constant private DEBUG = true;
+    bool constant private DEBUG = false;
 
     error UnsupportedChain(uint256 chainId);
     function setUp() public {}
@@ -26,7 +26,8 @@ contract DeployL2Script is Script {
             console.log("DEBUG MODE");
         }
 
-        address bridge;
+        address nftBridge;
+        address erc20Bridge;
         address remoteToken;
         uint256 remoteChainId;
         address remoteErc20Token;
@@ -37,6 +38,7 @@ contract DeployL2Script is Script {
         // sepolia - remote chain id - 0xaa36a7
 
         // mainnet - nft bridge - 0x4200000000000000000000000000000000000014
+        // mainnet - erc20 bridge - 0x4200000000000000000000000000000000000010
         // mainnet - hypc erc20 - 0xeA7B7DC089c9a4A916B5a7a37617f59fD54e37E4
         // mainnet - hypercycle licence - 0xd32CB5f76989A27782e44c5297AAba728Ad61669
         // mainnet - swapv2 - 0x21468e63abF3783020750F7b2e57d4B34aFAfba6 (current root token id = 67109152) (67108864 + 4095)
@@ -44,12 +46,12 @@ contract DeployL2Script is Script {
 
 
         if (block.chainid == 10) { // Optimism Sepolia
-            bridge = 0x4200000000000000000000000000000000000014;
+
             remoteToken = 0xa1A874b461056d7dBe6fEB31f2a8c5301A4879Dd; // HyperCycle License on Sepolia
             remoteChainId = 0xaa36a7; // Sepolia chain ID
             remoteErc20Token = 0x5a3A8238f9A0564b30B90AF267146504FCc303F1; // HyPC ERC20 on Sepolia
         } else if (block.chainid == 11155420) { // Optimism Mainnet
-            bridge = 0x4200000000000000000000000000000000000014;
+
             remoteToken = 0xd32CB5f76989A27782e44c5297AAba728Ad61669; // HyperCycle License on Mainnet
             remoteChainId = 0x01; // Mainnet chain ID
             remoteErc20Token = 0xeA7B7DC089c9a4A916B5a7a37617f59fD54e37E4; // HyPC ERC20 on Mainnet
@@ -57,11 +59,15 @@ contract DeployL2Script is Script {
             revert UnsupportedChain(block.chainid);
         }
 
+        // optimism system contracts.
+        nftBridge = 0x4200000000000000000000000000000000000014;
+        erc20Bridge = 0x4200000000000000000000000000000000000010;
+
         console.log("Deploying on chain: ", block.chainid);
 
 
 
-        L2HypercycleLicence hypcLicense = new L2HypercycleLicence(bridge, remoteToken, remoteChainId);
+        L2HypercycleLicence hypcLicense = new L2HypercycleLicence(nftBridge, remoteToken, remoteChainId);
 
         uint256 startSwapV2 = 67108864 + 2048; // = 67110912. like 50% of the total root token supply
         uint256 endSwapV2 = 67108864 + 4095;
@@ -73,7 +79,7 @@ contract DeployL2Script is Script {
             startSwapV2,
             endSwapV2);
 
-        L2HypercycleToken hypcToken = new L2HypercycleToken(bridge, remoteErc20Token);
+        L2HypercycleToken hypcToken = new L2HypercycleToken(erc20Bridge, remoteErc20Token);
         
         // mainnet
         // HypercycleShareTokenV2 start number = 8590983168
