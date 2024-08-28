@@ -1,5 +1,8 @@
 {
   "dependencies": {
     "@openzeppelin/contracts": "4.8.2"
+  },
+  "scripts": {
+    "deploy-l2": "source .env && forge script script/DeployL2.s.sol:DeployL2Script --private-key $PRIVATE_KEY --rpc-url $RPC_URL --legacy --verify --etherscan-api-key $ETHERSCAN_API_KEY --broadcast -vv"
   }
 }
