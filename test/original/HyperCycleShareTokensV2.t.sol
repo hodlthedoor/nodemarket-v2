@@ -67,7 +67,6 @@ contract HyperCycleShareTokenV2Test is Test {
     // Transfer the minted c_HyPC token to user1
     uint256 tokenId = hypcSwapV2.getAvailableToken(19, 0); // Get the tokenId that was minted
 
-
     hypcLicense.safeTransferFrom(address(this), user1, 8796629893120);
 
 
@@ -75,6 +74,8 @@ contract HyperCycleShareTokenV2Test is Test {
     vm.startPrank(user1);
     // Swap for a v2 token to ensure user1 has a token for sharing
     hypcSwapV2.swapV2(19); // Swap for a level 19 c_HyPC token to mint it
+
+    assertEq(hypcSwapV2.ownerOf(tokenId), user1);
 
     // Approve the share contract for licenses and c_HyPC tokens
     hypcLicense.approve(address(hypcShare), 8796629893120);
@@ -85,6 +86,8 @@ contract HyperCycleShareTokenV2Test is Test {
 
     // Create share tokens for user1
     hypcShare.createShareTokens(8796629893120, tokenId, true, "start message", delayAmount);
+
+    assertEq(hypcSwapV2.ownerOf(tokenId), address(hypcShare));
 
     // Check that the assignment number is correctly set
     assertEq(hypcSwapV2.getAssignmentNumber(tokenId), 8796629893120);
